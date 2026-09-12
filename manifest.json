@@ -2,7 +2,7 @@
   "name": "Football Auction",
   "short_name": "Football Auction",
   "description": "Local 2-player football auction game. No internet needed.",
-  "start_url": "./football-bara-salfa.html",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#071C16",
   "theme_color": "#071C16",
