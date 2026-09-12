@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Football Auction — Local 2-Player Auction Game</title>
 <meta name="theme-color" content="#071C16" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Football Auction" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -329,6 +335,35 @@ input{font-family:var(--body)}
 @media (max-width:759px){
   .flip{height:268px}
   .footer-actions .btn{min-width:0}
+
+  /* safe area for iphone notch / home bar */
+  .app{padding-bottom:max(40px,env(safe-area-inset-bottom))}
+
+  /* ---- compact auction stage: mini card + bid side-by-side ---- */
+  .stage{flex-direction:row;flex-wrap:wrap;align-items:flex-start;gap:10px}
+  #cardSlot{flex:none}
+  #cardSlot .card{width:min(148px,40vw);padding:10px;border-radius:var(--r-md)}
+  #cardSlot .card-rating{font-size:28px}
+  #cardSlot .card-portrait{width:44px;height:44px;font-size:17px}
+  #cardSlot .card-name{font-size:15px;margin:6px 0 2px}
+  #cardSlot .card-meta{font-size:10px;gap:5px}
+  #cardSlot .card-stats{display:none}
+  #cardSlot .ribbon{font-size:9px;padding:2px 32px;top:10px;right:-32px}
+  .bid-display{flex:1;min-width:120px;text-align:left;padding-top:2px}
+  .bid-label{font-size:10px}
+  .bid-value{font-size:clamp(36px,11vw,54px)}
+  .leader{font-size:12px}
+  .turn-banner{flex:0 0 100%;order:3;font-size:16px;padding:8px}
+
+  /* ---- bigger touch targets ---- */
+  .btn-bid,.btn-pass{min-height:60px}
+  .bid-input{height:60px;font-size:20px}
+  .quick button{min-height:40px;padding:7px 10px;font-size:13px;border-radius:10px}
+  .quick{gap:5px}
+
+  /* ---- panel ---- */
+  .panel{border-radius:var(--r-md)}
+  .panel-budget{font-size:22px}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
@@ -1267,6 +1302,10 @@ function updatePanels(){
     const p = state.players[state.turn];
     if (money(p.budget) <= money(state.bid)){
       tb.textContent = 'Player ' + state.turn + ' — budget too low, you must pass';
+    }
+    if (window.innerWidth < 760){
+      const activePanel = document.querySelector('.panel.active');
+      if (activePanel) setTimeout(() => activePanel.scrollIntoView({ behavior: REDUCED ? 'auto' : 'smooth', block: 'nearest' }), 80);
     }
   }
 }
