@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Football Bara Salfa — Local 2-Player Auction Game</title>
+<title>Football Auction — Local 2-Player Auction Game</title>
 <meta name="theme-color" content="#071C16" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -341,7 +341,7 @@ input{font-family:var(--body)}
 <section id="screen-home" class="screen active">
   <div class="home-hero">
     <div class="kickoff-crest">⚽</div>
-    <h1 class="home-title">Football<span class="salfa">Bara Salfa</span></h1>
+    <h1 class="home-title">Football<span class="salfa">Auction</span></h1>
     <p class="tagline">Build your team.<br><b>Outbid your rival.</b><br>Become the champion.</p>
   </div>
 
@@ -550,7 +550,7 @@ input{font-family:var(--body)}
 <div class="toast" id="toast"></div>
 <script>
 /* =========================================================================
-   FOOTBALL BARA SALFA — DATA LAYER
+   FOOTBALL AUCTION — DATA LAYER
    Compact tuples: [name, club, country, rating, rarity]
    rarity: "normal" | "star" | "legend"
    Attributes (pace/shooting/passing/defending/physical) are derived from the
@@ -797,7 +797,7 @@ const DEMO_SEQUENCE = [
 </script>
 <script>
 /* =========================================================================
-   FOOTBALL BARA SALFA — GAME ENGINE (pure logic, no DOM)
+   FOOTBALL AUCTION — GAME ENGINE (pure logic, no DOM)
    Every rule from the spec lives here so it can be tested in isolation.
    ========================================================================= */
 
@@ -1131,7 +1131,7 @@ function runRuleTests(){
 </script>
 <script>
 /* =========================================================================
-   FOOTBALL BARA SALFA — UI LAYER
+   FOOTBALL AUCTION — UI LAYER
    ========================================================================= */
 const $ = id => document.getElementById(id);
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
