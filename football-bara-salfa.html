@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Football Bara Salfa — Local 2-Player Auction Game</title>
+<meta name="theme-color" content="#071C16" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,600;0,700;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#071C16;
+  --bg-2:#0A2419;
+  --pitch:#123C2D;
+  --pitch-2:#0E2E23;
+  --gold:#D7AD4D;
+  --gold-soft:#F0D79A;
+  --p1:#1683FF;
+  --p2:#FF465C;
+  --white:#F5F7F6;
+  --muted:#8FA79C;
+  --line:rgba(245,247,246,.10);
+  --ok:#3FD98A;
+  --bad:#FF6B7D;
+  --r-lg:20px;
+  --r-md:14px;
+  --r-sm:10px;
+  --shadow:0 18px 40px -18px rgba(0,0,0,.85);
+  --display:"Barlow Condensed","Arial Narrow",Impact,system-ui,sans-serif;
+  --body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:
+    radial-gradient(1100px 700px at 50% -12%, rgba(18,60,45,.95) 0%, rgba(7,28,22,0) 62%),
+    linear-gradient(#071C16,#050F0C 85%);
+  background-attachment:fixed;
+  color:var(--white);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.5;
+  min-height:100dvh;
+  overflow-x:hidden;
+}
+/* faint pitch stripes behind everything */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.016) 0 60px,transparent 60px 120px);
+}
+.app{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:14px 14px 40px}
+h1,h2,h3,h4{font-family:var(--display);margin:0;line-height:1;letter-spacing:.01em;text-transform:uppercase}
+button{font-family:var(--display);font-size:18px;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;border:0;color:var(--white);border-radius:var(--r-md)}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+input{font-family:var(--body)}
+.screen{display:none;animation:screenIn .35s ease both}
+.screen.active{display:block}
+@keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ============ BUTTONS ============ */
+.btn{padding:14px 22px;background:rgba(245,247,246,.08);border:1px solid var(--line);min-height:52px;transition:transform .12s ease,background .2s ease,border-color .2s}
+.btn:hover{background:rgba(245,247,246,.14)}
+.btn:active{transform:scale(.975)}
+.btn-gold{background:linear-gradient(180deg,#EBC469,#C79B36);color:#231A05;border:0;font-weight:700;box-shadow:0 10px 26px -12px rgba(215,173,77,.9)}
+.btn-gold:hover{background:linear-gradient(180deg,#F4D07A,#D3A63D)}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--white)}
+.btn-lg{font-size:22px;padding:18px 30px;min-height:62px;width:100%}
+.btn[disabled]{opacity:.38;cursor:not-allowed;transform:none}
+.btn-bid{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.06));border:1px solid rgba(255,255,255,.22);font-weight:700;font-size:20px;flex:2}
+.btn-pass{background:transparent;border:1px solid rgba(255,255,255,.25);flex:1;font-size:18px}
+.p1 .btn-bid{background:linear-gradient(180deg,#2E92FF,#0C63CC);border-color:rgba(255,255,255,.25)}
+.p2 .btn-bid{background:linear-gradient(180deg,#FF5C70,#D62A40);border-color:rgba(255,255,255,.25)}
+
+/* ============ HOME ============ */
+.home-hero{position:relative;text-align:center;padding:26px 0 6px}
+.kickoff-crest{
+  width:64px;height:64px;margin:0 auto 14px;border-radius:50%;
+  border:2px solid var(--gold);display:grid;place-items:center;
+  background:radial-gradient(circle at 50% 30%,rgba(215,173,77,.28),transparent 70%);
+  font-family:var(--display);font-size:30px;color:var(--gold);
+}
+.home-title{font-size:clamp(46px,13vw,104px);font-weight:700;font-style:italic;letter-spacing:-.01em;
+  background:linear-gradient(180deg,#FFFFFF 28%,#CFE0D7 55%,#8FA79C 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 8px 24px rgba(0,0,0,.6))}
+.home-title .salfa{display:block;background:linear-gradient(180deg,#F6DFA6,#C79B36);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tagline{font-family:var(--display);font-size:clamp(15px,3.6vw,20px);color:var(--muted);letter-spacing:.18em;margin-top:14px;text-transform:uppercase;line-height:1.7}
+.tagline b{color:var(--white);font-weight:600}
+.facts{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:26px 0 24px}
+.fact{border:1px solid var(--line);border-radius:var(--r-md);padding:12px 18px;min-width:104px;background:rgba(9,35,27,.6)}
+.fact b{display:block;font-family:var(--display);font-size:30px;color:var(--gold);line-height:1}
+.fact span{font-size:11px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase}
+.home-actions{display:flex;flex-direction:column;gap:12px;max-width:420px;margin:0 auto}
+.home-row{display:flex;gap:12px}
+.home-row .btn{flex:1}
+.home-cards{--off:clamp(72px,23vw,108px);position:relative;margin:30px auto 6px;height:215px;max-width:480px}
+.home-cards .mini{position:absolute;top:0;left:50%}
+.home-cards .mini:nth-child(1){transform:translateX(calc(-50% - var(--off))) rotate(-11deg)}
+.home-cards .mini:nth-child(2){transform:translateX(-50%) translateY(-10px) scale(1.06);z-index:2}
+.home-cards .mini:nth-child(3){transform:translateX(calc(-50% + var(--off))) rotate(11deg)}
+
+/* ============ PLAYER CARD ============ */
+.card{
+  width:min(300px,84vw);border-radius:var(--r-lg);padding:16px 16px 14px;position:relative;overflow:hidden;
+  background:linear-gradient(165deg,#20302B 0%,#0D1F1A 58%,#0A1714 100%);
+  border:1px solid rgba(245,247,246,.16);box-shadow:var(--shadow);
+}
+.card.mini{width:150px;padding:10px;border-radius:var(--r-md)}
+.card::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,.10) 48%,transparent 58%)}
+.card.star{background:linear-gradient(165deg,#3A2E12 0%,#1A1408 55%,#120E05 100%);border-color:rgba(215,173,77,.55)}
+.card.legend{background:linear-gradient(165deg,#2A2109 0%,#120D03 52%,#070502 100%);border-color:var(--gold);
+  box-shadow:0 0 0 1px rgba(215,173,77,.35),0 0 44px -10px rgba(215,173,77,.55),var(--shadow)}
+.card-top{display:flex;gap:12px;align-items:flex-start}
+.card-rating{font-family:var(--display);font-size:54px;font-weight:700;font-style:italic;line-height:.86;color:var(--white)}
+.card.star .card-rating,.card.legend .card-rating{color:var(--gold-soft)}
+.card.mini .card-rating{font-size:30px}
+.card-pos{font-family:var(--display);font-size:15px;letter-spacing:.16em;color:var(--muted);margin-top:4px}
+.card-portrait{margin-left:auto;width:86px;height:86px;border-radius:50%;display:grid;place-items:center;flex:none;
+  background:radial-gradient(circle at 50% 18%,rgba(255,255,255,.16),rgba(255,255,255,.03) 70%);
+  border:1px solid rgba(255,255,255,.14);font-family:var(--display);font-size:32px;letter-spacing:.02em;color:var(--white)}
+.card.mini .card-portrait{width:48px;height:48px;font-size:19px}
+.card.legend .card-portrait{border-color:rgba(215,173,77,.6);color:var(--gold-soft)}
+.card-name{font-family:var(--display);font-size:clamp(26px,6.4vw,34px);font-weight:700;margin:12px 0 2px;line-height:1;text-transform:uppercase}
+.card.mini .card-name{font-size:17px;margin:8px 0 2px}
+.card-meta{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.card.mini .card-meta{font-size:10.5px}
+.dot{width:3px;height:3px;border-radius:50%;background:var(--muted);display:inline-block}
+.card-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:14px}
+.stat{text-align:center}
+.stat i{display:block;font-style:normal;font-size:9px;letter-spacing:.1em;color:var(--muted);margin-bottom:4px}
+.stat b{font-family:var(--display);font-size:19px;font-weight:600}
+.stat .bar{height:3px;border-radius:2px;background:rgba(255,255,255,.12);margin-top:4px;overflow:hidden}
+.stat .bar i{display:block;height:100%;background:var(--gold);border-radius:2px;margin:0}
+.ribbon{position:absolute;top:13px;right:-34px;transform:rotate(45deg);background:var(--gold);color:#231A05;
+  font-family:var(--display);font-size:11px;letter-spacing:.16em;padding:3px 40px;font-weight:700;z-index:3}
+.card.normal .ribbon{background:rgba(245,247,246,.75);color:#0A1714}
+.card.legend .ribbon{background:linear-gradient(90deg,#F6DFA6,#C79B36)}
+.card-coach .card-portrait{border-radius:14px}
+
+/* ============ AUCTION TOP BAR ============ */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.auction-count{font-family:var(--display);font-size:15px;letter-spacing:.12em;color:var(--muted)}
+.auction-count b{color:var(--white);font-size:20px}
+.pos-name{font-family:var(--display);font-size:clamp(22px,5.6vw,30px);color:var(--gold);text-align:center;flex:1}
+.timeline{display:flex;gap:4px;margin-bottom:16px}
+.timeline i{flex:1;height:5px;border-radius:3px;background:rgba(245,247,246,.12);transition:background .4s}
+.timeline i.done{background:var(--gold)}
+.timeline i.now{background:var(--white);box-shadow:0 0 12px rgba(245,247,246,.6)}
+
+/* ============ AUCTION LAYOUT ============ */
+.auction-grid{display:grid;grid-template-columns:1fr;gap:14px}
+.stage{display:flex;flex-direction:column;align-items:center;gap:14px}
+.card-enter{animation:cardIn .5s cubic-bezier(.2,.8,.3,1) both}
+@keyframes cardIn{from{opacity:0;transform:translateY(26px) scale(.94)}to{opacity:1;transform:none}}
+.bid-display{text-align:center;width:100%;max-width:340px}
+.bid-label{font-size:11px;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+.bid-value{font-family:var(--display);font-size:clamp(48px,15vw,72px);font-weight:700;font-style:italic;color:var(--gold);line-height:1;display:block}
+.bid-value.pulse{animation:pulse .45s ease}
+@keyframes pulse{0%{transform:scale(1)}40%{transform:scale(1.16);filter:brightness(1.3)}100%{transform:scale(1)}}
+.leader{font-size:13px;color:var(--muted);min-height:20px}
+.leader b.p1c{color:var(--p1)}
+.leader b.p2c{color:var(--p2)}
+.turn-banner{width:100%;max-width:520px;text-align:center;font-family:var(--display);font-size:19px;letter-spacing:.1em;
+  padding:10px;border-radius:var(--r-md);border:1px solid var(--line);background:rgba(9,35,27,.7)}
+.turn-banner.t1{border-color:rgba(22,131,255,.55);color:#9CCBFF;background:rgba(22,131,255,.10)}
+.turn-banner.t2{border-color:rgba(255,70,92,.55);color:#FFB0B9;background:rgba(255,70,92,.10)}
+
+/* ============ BID PANELS ============ */
+.panels{display:grid;grid-template-columns:1fr;gap:12px}
+.panel{border-radius:var(--r-lg);padding:14px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(12,42,32,.85),rgba(8,26,20,.85));opacity:.55;transition:opacity .25s,border-color .25s,box-shadow .25s}
+.panel.p1{border-left:4px solid var(--p1)}
+.panel.p2{border-left:4px solid var(--p2)}
+.panel.active{opacity:1}
+.panel.p1.active{box-shadow:0 0 0 1px rgba(22,131,255,.45),0 0 34px -14px rgba(22,131,255,.9)}
+.panel.p2.active{box-shadow:0 0 0 1px rgba(255,70,92,.45),0 0 34px -14px rgba(255,70,92,.9)}
+.panel.flash{animation:flash .5s ease}
+@keyframes flash{0%{filter:brightness(1)}35%{filter:brightness(1.7)}100%{filter:brightness(1)}}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;gap:10px}
+.panel-name{font-family:var(--display);font-size:20px;letter-spacing:.06em}
+.p1 .panel-name{color:#9CCBFF}
+.p2 .panel-name{color:#FFB0B9}
+.panel-budget{font-family:var(--display);font-size:26px;color:var(--gold);white-space:nowrap}
+.panel-budget small{font-size:12px;color:var(--muted);display:block;text-align:right;letter-spacing:.1em;font-family:var(--body)}
+.bid-row{display:flex;gap:8px}
+.bid-input{flex:1;min-width:0;background:rgba(0,0,0,.35);border:1px solid var(--line);color:var(--white);
+  border-radius:var(--r-md);padding:0 14px;height:54px;font-size:18px;font-weight:600}
+.bid-input::placeholder{color:#65786F;font-weight:400}
+.bid-row .btn{min-height:54px;height:54px;display:grid;place-items:center}
+.quick{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.quick button{font-size:13px;padding:6px 11px;border-radius:8px;background:rgba(255,255,255,.07);border:1px solid var(--line);min-height:0}
+.panel-msg{font-size:12.5px;color:var(--bad);min-height:18px;margin-top:8px;font-weight:500}
+.panel-msg.ok{color:var(--ok)}
+.squad-mini{font-size:11.5px;color:var(--muted);margin-top:8px;letter-spacing:.04em}
+
+/* ============ LOG ============ */
+.log{border:1px solid var(--line);border-radius:var(--r-md);background:rgba(5,18,14,.6);max-height:150px;overflow:auto;padding:10px 12px}
+.log h4{font-size:13px;letter-spacing:.16em;color:var(--muted);margin-bottom:8px}
+.log-item{font-size:13px;padding:5px 0;border-top:1px solid rgba(245,247,246,.06);color:#CBD9D2;animation:logIn .3s ease both}
+.log-item:first-of-type{border-top:0}
+.log-item b{font-family:var(--display);font-size:15px;letter-spacing:.04em}
+.log-item .p1c{color:#6FB6FF}.log-item .p2c{color:#FF8B98}
+@keyframes logIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+
+/* ============ RESULT SCREEN ============ */
+.result-wrap{text-align:center;display:flex;flex-direction:column;align-items:center;gap:16px;padding-top:6px}
+.won-badge{font-family:var(--display);font-size:clamp(30px,8vw,46px);letter-spacing:.04em}
+.won-badge.p1c{color:#6FB6FF}.won-badge.p2c{color:#FF8B98}
+.paid{font-family:var(--display);font-size:20px;color:var(--gold);letter-spacing:.06em}
+.two-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.reveal-col{display:flex;flex-direction:column;align-items:center;gap:8px}
+.col-label{font-size:11px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase}
+.flip{position:relative;perspective:1200px;width:min(300px,84vw);height:288px}
+.flip-inner{position:relative;width:100%;height:100%;transition:transform .8s cubic-bezier(.4,.1,.2,1);transform-style:preserve-3d}
+.flip.flipped .flip-inner{transform:rotateY(180deg)}
+.flip-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center}
+.flip-back{transform:rotateY(180deg)}
+.card-back{width:100%;height:100%;border-radius:var(--r-lg);border:1px solid rgba(215,173,77,.5);
+  background:repeating-linear-gradient(135deg,#0C2A20 0 14px,#0A2118 14px 28px);display:grid;place-items:center;position:relative;overflow:hidden}
+.card-back span{font-family:var(--display);font-size:72px;color:rgba(215,173,77,.85);font-style:italic}
+.countdown{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:110px;color:var(--white);
+  background:rgba(5,15,12,.55);z-index:4;border-radius:var(--r-lg)}
+.countdown span{animation:count .8s ease both}
+@keyframes count{0%{opacity:0;transform:scale(1.9)}40%{opacity:1;transform:scale(1)}100%{opacity:.15;transform:scale(.8)}}
+.free-tag{font-family:var(--display);font-size:22px;letter-spacing:.14em;color:#231A05;background:linear-gradient(90deg,#F6DFA6,#C79B36);
+  padding:6px 18px;border-radius:999px;animation:popIn .4s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes popIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:none}}
+
+/* ============ PITCH / SQUAD ============ */
+.squads{display:grid;grid-template-columns:1fr;gap:18px}
+.squad-box{border:1px solid var(--line);border-radius:var(--r-lg);padding:14px;background:rgba(8,28,21,.6)}
+.squad-box.p1{border-top:3px solid var(--p1)}
+.squad-box.p2{border-top:3px solid var(--p2)}
+.squad-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+.squad-head h3{font-size:22px}
+.power{font-family:var(--display);font-size:15px;color:var(--muted);letter-spacing:.1em}
+.power b{font-size:30px;color:var(--gold);margin-left:6px}
+.pitch{position:relative;width:100%;max-width:430px;margin:0 auto;aspect-ratio:3/4;border-radius:var(--r-md);overflow:hidden;
+  background:
+    linear-gradient(180deg,#10392A,#0B2A1F);
+  border:1px solid rgba(245,247,246,.12)}
+.pitch::before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,.035) 0 10%,transparent 10% 20%)}
+.pitch-lines{position:absolute;inset:0}
+.pitch-lines div{position:absolute;border:1.5px solid rgba(245,247,246,.16)}
+.pitch-lines .pl-circle{width:34%;aspect-ratio:1;border-radius:50%;left:33%;top:50%;transform:translateY(-50%)}
+.pitch-lines .pl-half{left:0;top:50%;height:0;border-width:1.5px 0 0 0;width:100%}
+.pitch-lines .pl-boxA{left:22%;width:56%;top:0;height:14%;border-top:0}
+.pitch-lines .pl-boxB{left:22%;width:56%;bottom:0;height:14%;border-bottom:0}
+.slot{position:absolute;transform:translate(-50%,-50%);text-align:center;width:74px}
+.slot .shirt{width:40px;height:40px;margin:0 auto;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--display);font-size:16px;border:2px solid rgba(255,255,255,.35);background:rgba(5,18,14,.7)}
+.squad-box.p1 .slot.filled .shirt{background:linear-gradient(180deg,#2E92FF,#0C63CC);border-color:#9CCBFF}
+.squad-box.p2 .slot.filled .shirt{background:linear-gradient(180deg,#FF5C70,#D62A40);border-color:#FFB0B9}
+.slot.empty .shirt{border-style:dashed;color:#5E736A}
+.slot small{display:block;font-size:9.5px;letter-spacing:.1em;color:var(--muted);margin-top:3px;text-transform:uppercase}
+.slot .nm{display:block;font-family:var(--display);font-size:12.5px;margin-top:2px;line-height:1.1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot.pop{animation:popIn .45s cubic-bezier(.2,1.4,.4,1) both}
+.coach-row{display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-md);background:rgba(0,0,0,.25)}
+.coach-row .badge{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-family:var(--display);font-size:15px;background:rgba(215,173,77,.16);border:1px solid rgba(215,173,77,.45);color:var(--gold-soft)}
+.coach-row .nm{font-family:var(--display);font-size:18px}
+.coach-row small{color:var(--muted);font-size:11px;display:block;letter-spacing:.08em}
+.coach-row .rt{margin-left:auto;font-family:var(--display);font-size:24px;color:var(--gold)}
+
+/* ============ TABLES / STATS ============ */
+.stat-rows{margin-top:12px;font-size:13px}
+.stat-rows div{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid rgba(245,247,246,.07)}
+.stat-rows span:first-child{color:var(--muted)}
+.stat-rows b{font-family:var(--display);font-size:17px;letter-spacing:.03em}
+
+/* ============ FINAL ============ */
+.scoreline{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;text-align:center;
+  border:1px solid rgba(215,173,77,.35);border-radius:var(--r-lg);padding:18px 12px;margin-bottom:14px;
+  background:linear-gradient(180deg,rgba(18,60,45,.7),rgba(7,28,22,.7))}
+.scoreline .team{font-family:var(--display);font-size:clamp(17px,4.4vw,24px)}
+.scoreline .sc{font-family:var(--display);font-size:clamp(44px,12vw,72px);font-weight:700;font-style:italic;color:var(--gold);letter-spacing:.02em;white-space:nowrap}
+.verdict{text-align:center;font-family:var(--display);font-size:clamp(26px,7vw,40px);margin:6px 0 4px}
+.verdict-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:18px}
+.matchstats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.ms{border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px;background:rgba(8,28,21,.6)}
+.ms i{font-style:normal;font-size:10.5px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase;display:block}
+.ms b{font-family:var(--display);font-size:18px;display:block;margin-top:3px;line-height:1.15}
+
+/* ============ MODAL / HOW TO ============ */
+.modal-bg{position:fixed;inset:0;background:rgba(3,10,8,.82);display:none;place-items:center;z-index:60;padding:16px}
+.modal-bg.open{display:grid;animation:screenIn .25s ease both}
+.modal{background:linear-gradient(180deg,#0D2A20,#081C15);border:1px solid var(--line);border-radius:var(--r-lg);
+  max-width:460px;width:100%;padding:20px;max-height:86dvh;overflow:auto}
+.modal h3{font-size:24px;margin-bottom:12px}
+.set-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.switch{width:58px;height:32px;border-radius:999px;background:rgba(255,255,255,.14);position:relative;border:0;padding:0}
+.switch i{position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:var(--white);transition:left .2s}
+.switch.on{background:var(--gold)}
+.switch.on i{left:29px}
+.rules-list{counter-reset:r;padding:0;margin:0;list-style:none}
+.rules-list li{counter-increment:r;position:relative;padding:10px 0 10px 40px;border-top:1px solid rgba(245,247,246,.07);font-size:14.5px;color:#D3E0DA}
+.rules-list li::before{content:counter(r);position:absolute;left:0;top:9px;width:26px;height:26px;border-radius:50%;
+  display:grid;place-items:center;font-family:var(--display);font-size:14px;color:var(--gold);border:1px solid rgba(215,173,77,.45)}
+.test-out{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;background:rgba(0,0,0,.45);border-radius:var(--r-sm);padding:10px;margin-top:10px;max-height:230px;overflow:auto;white-space:pre-wrap}
+.test-out .ok{color:var(--ok)}.test-out .bad{color:var(--bad)}
+
+/* ============ MISC ============ */
+.section-title{font-size:clamp(24px,6vw,34px);text-align:center;margin:6px 0 4px}
+.section-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:20px}
+.footer-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap}
+.footer-actions .btn{flex:1;min-width:140px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);opacity:0;
+  background:#0E2E23;border:1px solid var(--gold);color:var(--white);padding:12px 18px;border-radius:999px;
+  font-size:14px;z-index:90;pointer-events:none;transition:.28s ease;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.hidden{display:none !important}
+
+/* ============ RESPONSIVE ============ */
+@media (min-width:760px){
+  .app{padding:22px 22px 56px}
+  .auction-grid{grid-template-columns:1fr minmax(320px,360px) 1fr;align-items:start;gap:18px}
+  .panels{display:contents}
+  .panel.p1{grid-column:1;grid-row:1}
+  .stage{grid-column:2;grid-row:1}
+  .panel.p2{grid-column:3;grid-row:1}
+  .log-wrap{grid-column:1/-1}
+  .squads{grid-template-columns:1fr 1fr}
+  .matchstats{grid-template-columns:repeat(4,1fr)}
+  .slot{width:92px}
+  .slot .nm{font-size:14px}
+  .slot .shirt{width:46px;height:46px;font-size:18px}
+}
+@media (max-width:759px){
+  .flip{height:268px}
+  .footer-actions .btn{min-width:0}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<!-- ========== SCREEN 1: HOME ========== -->
+<section id="screen-home" class="screen active">
+  <div class="home-hero">
+    <div class="kickoff-crest">⚽</div>
+    <h1 class="home-title">Football<span class="salfa">Bara Salfa</span></h1>
+    <p class="tagline">Build your team.<br><b>Outbid your rival.</b><br>Become the champion.</p>
+  </div>
+
+  <div class="home-cards" id="homeCards"></div>
+
+  <div class="facts">
+    <div class="fact"><b>2</b><span>Players</span></div>
+    <div class="fact"><b>100M$</b><span>Each</span></div>
+    <div class="fact"><b>12</b><span>Auctions</span></div>
+  </div>
+
+  <div class="home-actions">
+    <button class="btn btn-gold btn-lg" id="btnStart">Start game</button>
+    <div class="home-row">
+      <button class="btn btn-ghost" id="btnHowTo">How to play</button>
+      <button class="btn btn-ghost" id="btnSettings">Settings</button>
+    </div>
+  </div>
+  <p style="text-align:center;color:#6C837A;font-size:12px;margin-top:18px">
+    One phone, two managers. No account, no internet needed.
+  </p>
+</section>
+
+<!-- ========== SCREEN 2: HOW TO PLAY ========== -->
+<section id="screen-howto" class="screen">
+  <h2 class="section-title">How to play</h2>
+  <p class="section-sub">Pass the phone between each action.</p>
+  <ol class="rules-list">
+    <li>Both managers start with a budget of 100M$.</li>
+    <li>One player appears at a time — you never see who comes next.</li>
+    <li>Every auction opens at 0M$.</li>
+    <li>Type any amount you want. There are no fixed steps.</li>
+    <li>Your bid must beat the current bid and fit inside your budget.</li>
+    <li>Pass whenever you want to stop bidding.</li>
+    <li>Whoever passes loses the player. The rival pays the last bid.</li>
+    <li>The manager who passed signs a secret player of the same position — for free.</li>
+    <li>The secret player is revealed to both of you, then leaves the pool forever.</li>
+    <li>Twelve auctions: 11 players and 1 coach.</li>
+    <li>The squad lines up in a 4-3-3 and team power decides the final match.</li>
+  </ol>
+  <div class="footer-actions">
+    <button class="btn btn-ghost" data-go="home">Back</button>
+    <button class="btn btn-gold" id="btnHowToStart">Start game</button>
+  </div>
+</section>
+
+<!-- ========== SCREEN 3: AUCTION ========== -->
+<section id="screen-auction" class="screen">
+  <div class="topbar">
+    <div class="auction-count">Auction <b id="acNum">1</b>/12</div>
+    <div class="pos-name" id="acPos">Goalkeeper</div>
+    <button class="btn" id="btnQuit" style="min-height:38px;padding:8px 14px;font-size:14px">Quit</button>
+  </div>
+  <div class="timeline" id="timeline"></div>
+
+  <div class="auction-grid">
+    <div class="stage">
+      <div id="cardSlot"></div>
+      <div class="bid-display">
+        <div class="bid-label">Current bid</div>
+        <span class="bid-value" id="bidValue">0M$</span>
+        <div class="leader" id="bidLeader">No bids yet — the floor is open.</div>
+      </div>
+      <div class="turn-banner t1" id="turnBanner">Player 1 to act</div>
+    </div>
+
+    <div class="panels">
+      <div class="panel p1 active" id="panel1">
+        <div class="panel-head">
+          <div class="panel-name">Player 1</div>
+          <div class="panel-budget"><span id="bud1">100M$</span><small>Budget</small></div>
+        </div>
+        <div class="bid-row">
+          <input class="bid-input" id="input1" type="number" inputmode="decimal" min="0" step="0.5"
+                 placeholder="Amount in M$" aria-label="Player 1 bid amount" />
+          <button class="btn btn-bid" id="bid1" aria-label="Player 1 bid">Bid</button>
+          <button class="btn btn-pass" id="pass1" aria-label="Player 1 pass">Pass</button>
+        </div>
+        <div class="quick" data-quick="1">
+          <button type="button" data-add="1">+1</button>
+          <button type="button" data-add="5">+5</button>
+          <button type="button" data-add="10">+10</button>
+          <button type="button" data-add="0.5">+0.5</button>
+        </div>
+        <div class="panel-msg" id="msg1"></div>
+        <div class="squad-mini" id="mini1">Squad 0/11 · Spent 0M$</div>
+      </div>
+
+      <div class="panel p2" id="panel2">
+        <div class="panel-head">
+          <div class="panel-name">Player 2</div>
+          <div class="panel-budget"><span id="bud2">100M$</span><small>Budget</small></div>
+        </div>
+        <div class="bid-row">
+          <input class="bid-input" id="input2" type="number" inputmode="decimal" min="0" step="0.5"
+                 placeholder="Amount in M$" aria-label="Player 2 bid amount" />
+          <button class="btn btn-bid" id="bid2" aria-label="Player 2 bid">Bid</button>
+          <button class="btn btn-pass" id="pass2" aria-label="Player 2 pass">Pass</button>
+        </div>
+        <div class="quick" data-quick="2">
+          <button type="button" data-add="1">+1</button>
+          <button type="button" data-add="5">+5</button>
+          <button type="button" data-add="10">+10</button>
+          <button type="button" data-add="0.5">+0.5</button>
+        </div>
+        <div class="panel-msg" id="msg2"></div>
+        <div class="squad-mini" id="mini2">Squad 0/11 · Spent 0M$</div>
+      </div>
+    </div>
+
+    <div class="log-wrap">
+      <div class="log" id="log"><h4>Auction log</h4><div id="logItems"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SCREEN 4: AUCTION RESULT ========== -->
+<section id="screen-result" class="screen">
+  <div class="result-wrap">
+    <div class="won-badge" id="resWinner">Player 1 wins</div>
+    <div class="paid" id="resPaid">Paid 20M$ · Budget left 80M$</div>
+    <div class="two-cards">
+      <div class="reveal-col">
+        <div class="col-label" id="labelWon">Signed at auction</div>
+        <div id="resMainCard"></div>
+      </div>
+      <div class="reveal-col">
+        <div class="col-label" id="labelSecret">Secret player</div>
+        <div class="flip" id="flip">
+          <div class="flip-inner">
+            <div class="flip-face flip-front"><div class="card-back"><span>?</span></div></div>
+            <div class="flip-face flip-back" id="resSecretCard"></div>
+          </div>
+          <div class="countdown hidden" id="countdown"><span>3</span></div>
+        </div>
+        <div class="free-tag hidden" id="freeTag">Signed for free</div>
+      </div>
+    </div>
+    <div class="footer-actions" style="max-width:520px;width:100%">
+      <button class="btn btn-ghost" id="btnViewSquads">View squads</button>
+      <button class="btn btn-gold" id="btnNext">Next position</button>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SCREEN 5: SQUAD VIEW ========== -->
+<section id="screen-squads" class="screen">
+  <h2 class="section-title">Squads</h2>
+  <p class="section-sub" id="squadsSub">4-3-3 · live team power</p>
+  <div class="squads" id="squadsWrap"></div>
+  <div class="footer-actions">
+    <button class="btn btn-gold btn-lg" id="btnBackFromSquads">Back to auction</button>
+  </div>
+</section>
+
+<!-- ========== SCREEN 6: FINAL RESULT ========== -->
+<section id="screen-final" class="screen">
+  <h2 class="section-title">Full time</h2>
+  <p class="section-sub">Simulated from team power — no luck without a reason.</p>
+  <div class="scoreline">
+    <div class="team" id="fTeam1" style="color:#9CCBFF">Player 1</div>
+    <div class="sc" id="fScore">3 - 2</div>
+    <div class="team" id="fTeam2" style="color:#FFB0B9">Player 2</div>
+  </div>
+  <div class="verdict" id="fVerdict">Player 1 wins</div>
+  <div class="verdict-sub" id="fVerdictSub"></div>
+  <div class="matchstats" id="fStats"></div>
+  <div class="squads" id="finalSquads"></div>
+  <div class="footer-actions">
+    <button class="btn btn-ghost" id="btnFinalHome">Home</button>
+    <button class="btn btn-gold" id="btnPlayAgain">Play again</button>
+  </div>
+</section>
+
+</div><!-- /app -->
+
+<!-- ========== MODALS ========== -->
+<div class="modal-bg" id="modalSettings">
+  <div class="modal">
+    <h3>Settings</h3>
+    <div class="set-row"><span>Sound effects</span><button class="switch on" id="swSound" aria-label="Toggle sound"><i></i></button></div>
+    <div class="set-row"><span>Vibration</span><button class="switch on" id="swVibe" aria-label="Toggle vibration"><i></i></button></div>
+    <div class="set-row"><span>Demo mode (fixed players)</span><button class="switch" id="swDemo" aria-label="Toggle demo mode"><i></i></button></div>
+    <div class="set-row" style="display:block">
+      <button class="btn btn-ghost" id="btnRunTests" style="width:100%;margin-top:6px">Run rule tests</button>
+      <div class="test-out hidden" id="testOut"></div>
+    </div>
+    <div class="footer-actions">
+      <button class="btn btn-ghost" id="btnResetGame">Reset game</button>
+      <button class="btn btn-gold" data-close-modal>Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalConfirm">
+  <div class="modal" style="max-width:380px">
+    <h3 id="cfTitle">Reset the game?</h3>
+    <p style="color:#B7C7C0;font-size:14px" id="cfText">Both squads, budgets and the auction order will be wiped.</p>
+    <div class="footer-actions">
+      <button class="btn btn-ghost" data-close-modal>Keep playing</button>
+      <button class="btn btn-gold" id="cfYes">Reset</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<script>
+/* =========================================================================
+   FOOTBALL BARA SALFA — DATA LAYER
+   Compact tuples: [name, club, country, rating, rarity]
+   rarity: "normal" | "star" | "legend"
+   Attributes (pace/shooting/passing/defending/physical) are derived from the
+   position profile + rating in buildPlayer(), so the dataset stays readable.
+   ========================================================================= */
+
+const SLOTS = [
+  { key:'GK',  pool:'GK',    label:'Goalkeeper',          short:'GK',  x:50, y:91 },
+  { key:'RB',  pool:'RB',    label:'Right Back',          short:'RB',  x:85, y:73 },
+  { key:'LB',  pool:'LB',    label:'Left Back',           short:'LB',  x:15, y:73 },
+  { key:'CB1', pool:'CB',    label:'Centre Back 1',       short:'CB',  x:63, y:77 },
+  { key:'CB2', pool:'CB',    label:'Centre Back 2',       short:'CB',  x:37, y:77 },
+  { key:'CDM', pool:'CDM',   label:'Defensive Midfielder',short:'CDM', x:50, y:57 },
+  { key:'CM1', pool:'CM',    label:'Central Midfielder 1',short:'CM',  x:70, y:43 },
+  { key:'CM2', pool:'CM',    label:'Central Midfielder 2',short:'CM',  x:30, y:43 },
+  { key:'RW',  pool:'RW',    label:'Right Winger',        short:'RW',  x:83, y:21 },
+  { key:'LW',  pool:'LW',    label:'Left Winger',         short:'LW',  x:17, y:21 },
+  { key:'ST',  pool:'ST',    label:'Striker',             short:'ST',  x:50, y:12 },
+  { key:'COACH', pool:'COACH', label:'Coach',             short:'COACH', x:0, y:0 }
+];
+
+const RAW = {
+  GK: [
+    ['Thibaut Courtois','Real Madrid','Belgium',90,'star'],
+    ['Gianluigi Donnarumma','Manchester City','Italy',88,'star'],
+    ['Manuel Neuer','Bayern Munich','Germany',88,'legend'],
+    ['Alisson Becker','Liverpool','Brazil',89,'star'],
+    ['Ederson','Fenerbahce','Brazil',86,'normal'],
+    ['Jan Oblak','Atletico Madrid','Slovenia',87,'star'],
+    ['Iker Casillas','Real Madrid','Spain',91,'legend'],
+    ['Gianluigi Buffon','Juventus','Italy',92,'legend'],
+    ['Peter Schmeichel','Manchester United','Denmark',91,'legend'],
+    ['Yassine Bounou','Al-Hilal','Morocco',84,'normal'],
+    ['David Raya','Arsenal','Spain',83,'normal'],
+    ['Andre Onana','Trabzonspor','Cameroon',80,'normal']
+  ],
+  RB: [
+    ['Achraf Hakimi','Paris Saint-Germain','Morocco',87,'star'],
+    ['Trent Alexander-Arnold','Real Madrid','England',86,'star'],
+    ['Dani Carvajal','Real Madrid','Spain',86,'star'],
+    ['Kyle Walker','Burnley','England',82,'normal'],
+    ['Cafu','AC Milan','Brazil',91,'legend'],
+    ['Philipp Lahm','Bayern Munich','Germany',90,'legend'],
+    ['Dani Alves','Barcelona','Brazil',89,'legend'],
+    ['Gary Neville','Manchester United','England',84,'legend'],
+    ['Denzel Dumfries','Inter','Netherlands',82,'normal'],
+    ['Aaron Wan-Bissaka','West Ham','England',78,'normal'],
+    ['Jules Kounde','Barcelona','France',85,'normal'],
+    ['Pedro Porro','Tottenham','Spain',81,'normal']
+  ],
+  LB: [
+    ['Theo Hernandez','Al-Hilal','France',85,'star'],
+    ['Alphonso Davies','Bayern Munich','Canada',84,'star'],
+    ['Marcelo','Real Madrid','Brazil',89,'legend'],
+    ['Roberto Carlos','Real Madrid','Brazil',91,'legend'],
+    ['Ashley Cole','Chelsea','England',88,'legend'],
+    ['Paolo Maldini','AC Milan','Italy',93,'legend'],
+    ['Jordi Alba','Inter Miami','Spain',84,'normal'],
+    ['Andrew Robertson','Liverpool','Scotland',85,'star'],
+    ['Alejandro Grimaldo','Bayer Leverkusen','Spain',83,'normal'],
+    ['Jose Gaya','Valencia','Spain',80,'normal'],
+    ['Nuno Mendes','Paris Saint-Germain','Portugal',84,'normal'],
+    ['Ben Chilwell','Strasbourg','England',77,'normal']
+  ],
+  CB: [
+    ['Virgil van Dijk','Liverpool','Netherlands',89,'star'],
+    ['Ruben Dias','Manchester City','Portugal',88,'star'],
+    ['Sergio Ramos','Sevilla','Spain',89,'legend'],
+    ['William Saliba','Arsenal','France',86,'star'],
+    ['Fabio Cannavaro','Real Madrid','Italy',90,'legend'],
+    ['Alessandro Nesta','AC Milan','Italy',90,'legend'],
+    ['Gerard Pique','Barcelona','Spain',87,'legend'],
+    ['Raphael Varane','Manchester United','France',85,'normal'],
+    ['Josko Gvardiol','Manchester City','Croatia',85,'normal'],
+    ['Cristian Romero','Tottenham','Argentina',85,'normal'],
+    ['Gleison Bremer','Juventus','Brazil',83,'normal'],
+    ['Nayef Aguerd','Real Sociedad','Morocco',80,'normal'],
+    ['Antonio Rudiger','Real Madrid','Germany',85,'normal'],
+    ['Marquinhos','Paris Saint-Germain','Brazil',86,'star']
+  ],
+  CDM: [
+    ['Rodri','Manchester City','Spain',91,'star'],
+    ['Casemiro','Manchester United','Brazil',83,'normal'],
+    ['Sergio Busquets','Inter Miami','Spain',85,'legend'],
+    ["N'Golo Kante",'Al-Ittihad','France',86,'star'],
+    ['Claude Makelele','Chelsea','France',88,'legend'],
+    ['Patrick Vieira','Arsenal','France',89,'legend'],
+    ['Gennaro Gattuso','AC Milan','Italy',85,'legend'],
+    ['Declan Rice','Arsenal','England',87,'star'],
+    ['Sofyan Amrabat','Fiorentina','Morocco',79,'normal'],
+    ['Martin Zubimendi','Arsenal','Spain',84,'normal'],
+    ['Fabinho','Al-Ittihad','Brazil',81,'normal'],
+    ['Joshua Kimmich','Bayern Munich','Germany',88,'star']
+  ],
+  CM: [
+    ['Kevin De Bruyne','Napoli','Belgium',90,'star'],
+    ['Luka Modric','AC Milan','Croatia',88,'legend'],
+    ['Jude Bellingham','Real Madrid','England',90,'star'],
+    ['Toni Kroos','Real Madrid','Germany',89,'legend'],
+    ['Xavi Hernandez','Barcelona','Spain',91,'legend'],
+    ['Andres Iniesta','Barcelona','Spain',92,'legend'],
+    ['Bernardo Silva','Manchester City','Portugal',87,'star'],
+    ['Pedri','Barcelona','Spain',87,'star'],
+    ['Steven Gerrard','Liverpool','England',89,'legend'],
+    ['Paul Scholes','Manchester United','England',88,'legend'],
+    ['Mesut Ozil','Arsenal','Germany',84,'normal'],
+    ['Azzedine Ounahi','Girona','Morocco',77,'normal'],
+    ['Frenkie de Jong','Barcelona','Netherlands',86,'star'],
+    ['Federico Valverde','Real Madrid','Uruguay',88,'star']
+  ],
+  RW: [
+    ['Mohamed Salah','Liverpool','Egypt',89,'star'],
+    ['Lionel Messi','Inter Miami','Argentina',93,'legend'],
+    ['Bukayo Saka','Arsenal','England',87,'star'],
+    ['Riyad Mahrez','Al-Ahli','Algeria',83,'normal'],
+    ['Angel Di Maria','Rosario Central','Argentina',86,'legend'],
+    ['Luis Figo','Real Madrid','Portugal',90,'legend'],
+    ['Arjen Robben','Bayern Munich','Netherlands',90,'legend'],
+    ['Gareth Bale','Real Madrid','Wales',88,'legend'],
+    ['Lamine Yamal','Barcelona','Spain',88,'star'],
+    ['Hakim Ziyech','Wydad Casablanca','Morocco',81,'normal'],
+    ['Antony','Real Betis','Brazil',76,'normal'],
+    ['Michael Olise','Bayern Munich','France',85,'normal']
+  ],
+  LW: [
+    ['Vinicius Junior','Real Madrid','Brazil',90,'star'],
+    ['Neymar Jr','Santos','Brazil',88,'star'],
+    ['Ronaldinho','Barcelona','Brazil',93,'legend'],
+    ['Cristiano Ronaldo','Al-Nassr','Portugal',92,'legend'],
+    ['Franck Ribery','Bayern Munich','France',88,'legend'],
+    ['Eden Hazard','Chelsea','Belgium',89,'legend'],
+    ['Ryan Giggs','Manchester United','Wales',88,'legend'],
+    ['Rafael Leao','AC Milan','Portugal',85,'normal'],
+    ['Nico Williams','Barcelona','Spain',85,'star'],
+    ['Leroy Sane','Galatasaray','Germany',82,'normal'],
+    ['Kingsley Coman','Al-Nassr','France',82,'normal'],
+    ['Sofiane Boufal','Al-Rayyan','Morocco',77,'normal']
+  ],
+  ST: [
+    ['Erling Haaland','Manchester City','Norway',91,'star'],
+    ['Kylian Mbappe','Real Madrid','France',91,'star'],
+    ['Robert Lewandowski','Barcelona','Poland',88,'star'],
+    ['Ronaldo Nazario','Real Madrid','Brazil',94,'legend'],
+    ['Marco van Basten','AC Milan','Netherlands',92,'legend'],
+    ['Thierry Henry','Arsenal','France',91,'legend'],
+    ['Didier Drogba','Chelsea','Ivory Coast',89,'legend'],
+    ['Samuel Etoo','Barcelona','Cameroon',89,'legend'],
+    ['Karim Benzema','Al-Ittihad','France',86,'star'],
+    ['Olivier Giroud','Lille','France',79,'normal'],
+    ['Jamie Vardy','Cremonese','England',78,'normal'],
+    ['Youssef En-Nesyri','Fenerbahce','Morocco',81,'normal'],
+    ['Victor Osimhen','Galatasaray','Nigeria',87,'star'],
+    ['Harry Kane','Bayern Munich','England',89,'star']
+  ],
+  COACH: [
+    ['Pep Guardiola','Manchester City','Spain',93,'legend'],
+    ['Carlo Ancelotti','Brazil NT','Italy',92,'legend'],
+    ['Jose Mourinho','Benfica','Portugal',89,'legend'],
+    ['Jurgen Klopp','Free agent','Germany',91,'legend'],
+    ['Alex Ferguson','Manchester United','Scotland',94,'legend'],
+    ['Zinedine Zidane','Free agent','France',88,'legend'],
+    ['Mikel Arteta','Arsenal','Spain',86,'star'],
+    ['Diego Simeone','Atletico Madrid','Argentina',87,'star'],
+    ['Luis Enrique','Paris Saint-Germain','Spain',88,'star'],
+    ['Xabi Alonso','Real Madrid','Spain',87,'star'],
+    ['Antonio Conte','Napoli','Italy',85,'normal'],
+    ['Walid Regragui','Morocco NT','Morocco',83,'normal'],
+    ['Roberto De Zerbi','Marseille','Italy',82,'normal'],
+    ['Unai Emery','Aston Villa','Spain',84,'normal']
+  ]
+};
+
+/* Attribute profile per position: [pace, shooting, passing, defending, physical]
+   offsets applied to the overall rating, then clamped to 40..99. */
+const PROFILE = {
+  GK:  [-18, -45,  -8,   6,   4],
+  RB:  [  4, -16,  -4,   1,  -2],
+  LB:  [  5, -16,  -3,   0,  -4],
+  CB:  [ -8, -26,  -9,   5,   5],
+  CDM: [ -6, -14,  -2,   4,   3],
+  CM:  [ -5,  -7,   4,  -8,  -3],
+  RW:  [  7,  -2,  -1, -24,  -9],
+  LW:  [  8,  -3,  -1, -25, -10],
+  ST:  [  4,   5,  -9, -30,   1],
+  COACH:[ 0,   0,   0,   0,   0]
+};
+
+/* Deterministic per-name jitter so a player's card is always identical. */
+function hashCode(str){
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+function clamp(n, lo, hi){ return Math.max(lo, Math.min(hi, n)); }
+
+function valueCategory(r){
+  if (r >= 90) return 'Elite';
+  if (r >= 86) return 'Top';
+  if (r >= 82) return 'Solid';
+  return 'Budget';
+}
+
+function buildPlayer(tuple, pool, index){
+  const [name, club, country, rating, rarity] = tuple;
+  const prof = PROFILE[pool];
+  const h = hashCode(name);
+  const stats = {};
+  const keys = ['pace','shooting','passing','defending','physical'];
+  keys.forEach((k, i) => {
+    const jitter = ((h >> (i * 3)) % 7) - 3;          // -3..+3, stable per name
+    stats[k] = clamp(Math.round(rating + prof[i] + jitter), 40, 99);
+  });
+  return {
+    id: pool + '-' + index,
+    name, club, country, rating, rarity,
+    position: pool,
+    type: pool === 'COACH' ? 'Coach' : (rarity === 'legend' ? 'Legend' : rarity === 'star' ? 'Star' : 'Normal'),
+    initials: name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase(),
+    value: valueCategory(rating),
+    ...stats
+  };
+}
+
+const POOLS = {};
+Object.keys(RAW).forEach(pool => {
+  POOLS[pool] = RAW[pool].map((t, i) => buildPlayer(t, pool, i));
+});
+
+/* Deterministic demo sequence (Settings > Demo mode) — main + secret per auction. */
+const DEMO_SEQUENCE = [
+  ['Thibaut Courtois','David Raya'],
+  ['Achraf Hakimi','Kyle Walker'],
+  ['Theo Hernandez','Jose Gaya'],
+  ['Virgil van Dijk','Gleison Bremer'],
+  ['Sergio Ramos','Nayef Aguerd'],
+  ['Rodri','Sofyan Amrabat'],
+  ['Kevin De Bruyne','Mesut Ozil'],
+  ['Luka Modric','Azzedine Ounahi'],
+  ['Mohamed Salah','Antony'],
+  ['Vinicius Junior','Sofiane Boufal'],
+  ['Erling Haaland','Olivier Giroud'],
+  ['Pep Guardiola','Mikel Arteta']
+];
+</script>
+<script>
+/* =========================================================================
+   FOOTBALL BARA SALFA — GAME ENGINE (pure logic, no DOM)
+   Every rule from the spec lives here so it can be tested in isolation.
+   ========================================================================= */
+
+const START_BUDGET = 100;
+
+const money = n => Math.round(n * 100) / 100;
+function formatM(n){
+  const v = money(n);
+  return (Number.isInteger(v) ? v : v.toFixed(2).replace(/0$/, '')) + 'M$';
+}
+
+function createGame(opts){
+  opts = opts || {};
+  const s = {
+    demo: !!opts.demo,
+    rng: opts.rng || Math.random,
+    auctionIndex: 0,
+    slot: null,
+    main: null,
+    secret: null,
+    bid: 0,
+    lastBidder: null,
+    turn: 1,
+    auctionClosed: false,
+    usedIds: [],
+    log: [],
+    history: [],
+    gameOver: false,
+    players: {
+      1: { num:1, name:'Player 1', budget:START_BUDGET, spent:0, squad:{}, coach:null, purchases:[] },
+      2: { num:2, name:'Player 2', budget:START_BUDGET, spent:0, squad:{}, coach:null, purchases:[] }
+    }
+  };
+  drawAuction(s);
+  return s;
+}
+
+/* ---- 1. Pick the main player and the hidden secret player -------------- */
+function pick(list, rng){ return list[Math.floor(rng() * list.length)]; }
+
+function selectMainPlayer(state, available){
+  if (state.demo){
+    const name = DEMO_SEQUENCE[state.auctionIndex][0];
+    return available.find(p => p.name === name) || available[0];
+  }
+  return pick(available, state.rng);
+}
+function selectSecretPlayer(state, available, main){
+  const rest = available.filter(p => p.id !== main.id);
+  if (state.demo){
+    const name = DEMO_SEQUENCE[state.auctionIndex][1];
+    return rest.find(p => p.name === name) || rest[0];
+  }
+  return pick(rest, state.rng);
+}
+
+function drawAuction(state){
+  const slot = SLOTS[state.auctionIndex];
+  const available = POOLS[slot.pool].filter(p => state.usedIds.indexOf(p.id) === -1);
+  const main = selectMainPlayer(state, available);
+  const secret = selectSecretPlayer(state, available, main);
+  state.slot = slot;
+  state.main = main;
+  state.secret = secret;
+  state.usedIds.push(main.id, secret.id);   // neither can return in a later auction
+  state.bid = 0;
+  state.lastBidder = null;
+  state.log = [];
+  state.turn = (state.auctionIndex % 2 === 0) ? 1 : 2;  // alternate who opens
+  state.auctionClosed = false;
+  return state;
+}
+
+/* ---- 2. Bid validation ------------------------------------------------- */
+function validateBid(state, num, raw){
+  if (state.auctionClosed) return { ok:false, message:'The auction has already finished.' };
+  if (state.turn !== num)   return { ok:false, message:'Wait for your turn to bid.' };
+  if (raw === '' || raw === null || raw === undefined)
+    return { ok:false, message:'Please enter a valid amount.' };
+  const amount = Number(raw);
+  if (!isFinite(amount) || isNaN(amount))
+    return { ok:false, message:'Please enter a valid amount.' };
+  if (amount <= 0)
+    return { ok:false, message:'Your bid must be higher than 0M$.' };
+  if (money(amount) <= money(state.bid))
+    return { ok:false, message:'Your bid must be higher than the current bid.' };
+  if (money(amount) > money(state.players[num].budget))
+    return { ok:false, message:'You do not have enough budget.' };
+  return { ok:true, amount: money(amount) };
+}
+
+function placeBid(state, num, raw){
+  const v = validateBid(state, num, raw);
+  if (!v.ok) return v;
+  state.bid = v.amount;
+  state.lastBidder = num;
+  state.turn = num === 1 ? 2 : 1;
+  state.log.unshift({ type:'bid', num, text:'bids ' + formatM(v.amount) });
+  return { ok:true, amount:v.amount };
+}
+
+/* ---- 3. Pass ends the auction immediately ------------------------------ */
+function canPass(state, num){
+  if (state.auctionClosed) return { ok:false, message:'The auction has already finished.' };
+  if (state.lastBidder === num)
+    return { ok:false, message:'You lead the bidding — you cannot pass now.' };
+  return { ok:true };
+}
+
+function passAuction(state, passer){
+  const c = canPass(state, passer);
+  if (!c.ok) return c;
+
+  const winnerNum = passer === 1 ? 2 : 1;
+  const price = money(state.bid);            // 0M$ if nobody ever bid
+  const winner = state.players[winnerNum];
+  const loser  = state.players[passer];
+  const slot   = state.slot;
+
+  addToSquad(winner, slot, state.main, price);
+  winner.budget = money(winner.budget - price);
+  winner.spent  = money(winner.spent + price);
+
+  addToSquad(loser, slot, state.secret, 0);
+
+  state.auctionClosed = true;
+  state.log.unshift({ type:'pass', num:passer, text:'passes' });
+  state.log.unshift({ type:'win', num:winnerNum,
+    text:'signs ' + state.main.name + ' for ' + formatM(price) });
+
+  const result = {
+    auction: state.auctionIndex + 1,
+    slot: slot.key,
+    winner: winnerNum,
+    loser: passer,
+    price,
+    main: state.main,
+    secret: state.secret
+  };
+  state.history.push(result);
+  return { ok:true, result };
+}
+
+function addToSquad(player, slot, card, price){
+  if (slot.key === 'COACH') player.coach = card;
+  else player.squad[slot.key] = card;
+  player.purchases.push({ slot: slot.key, player: card, price: money(price), free: price === 0 });
+}
+
+/* ---- 4. Next auction --------------------------------------------------- */
+function moveToNextPosition(state){
+  if (!state.auctionClosed) return { ok:false, message:'Finish the current auction first.' };
+  if (state.auctionIndex >= SLOTS.length - 1){
+    state.gameOver = true;
+    return { ok:true, finished:true };
+  }
+  state.auctionIndex += 1;
+  drawAuction(state);
+  return { ok:true, finished:false };
+}
+
+/* ---- 5. Team power ----------------------------------------------------- */
+/* Team power = average rating of the 11 outfield/GK players + coach bonus,
+   where coach bonus = (coach rating - 85) / 2. Fully transparent.        */
+function calculateTeamPower(player){
+  const squad = Object.values(player.squad);
+  const avg = squad.length ? squad.reduce((a, p) => a + p.rating, 0) / squad.length : 0;
+  const coachBonus = player.coach ? (player.coach.rating - 85) / 2 : 0;
+  return {
+    avg: Math.round(avg * 10) / 10,
+    coachBonus: Math.round(coachBonus * 10) / 10,
+    total: Math.round((avg + coachBonus) * 10) / 10,
+    filled: squad.length
+  };
+}
+
+/* ---- 6. Simulated match ------------------------------------------------ */
+function poisson(mean, rng){
+  const L = Math.exp(-mean);
+  let k = 0, p = 1;
+  do { k++; p *= rng(); } while (p > L);
+  return k - 1;
+}
+
+function simulateMatch(state){
+  const rng = state.rng;
+  const t1 = calculateTeamPower(state.players[1]);
+  const t2 = calculateTeamPower(state.players[2]);
+  const diff = t1.total - t2.total;
+
+  const xg1 = clamp(1.35 + diff * 0.30, 0.25, 5);
+  const xg2 = clamp(1.35 - diff * 0.30, 0.25, 5);
+  const g1 = Math.min(6, poisson(xg1, rng));
+  const g2 = Math.min(6, poisson(xg2, rng));
+
+  const pos1 = Math.round(clamp(50 + diff * 3, 28, 72));
+  const shots1 = Math.round(xg1 * 3.4 + pos1 / 12);
+  const shots2 = Math.round(xg2 * 3.4 + (100 - pos1) / 12);
+
+  let winner, reason;
+  if (g1 !== g2){
+    winner = g1 > g2 ? 1 : 2;
+    reason = 'Decided on the pitch.';
+  } else if (t1.total !== t2.total){
+    winner = t1.total > t2.total ? 1 : 2;
+    reason = 'Draw on the scoreboard — team power breaks the tie.';
+  } else {
+    winner = 0;
+    reason = 'Same score, same team power. Honours shared.';
+  }
+
+  return {
+    g1, g2, xg1:Math.round(xg1 * 100) / 100, xg2:Math.round(xg2 * 100) / 100,
+    pos1, pos2:100 - pos1, shots1, shots2,
+    power1:t1, power2:t2, winner, reason,
+    mvp: bestPlayer(state.players[winner === 2 ? 2 : 1])
+  };
+}
+
+function bestPlayer(player){
+  const all = Object.values(player.squad);
+  return all.sort((a, b) => b.rating - a.rating)[0] || null;
+}
+
+/* Best bargain = best rating obtained per M$ spent; free signings count as
+   their full rating, so the strongest free secret player usually wins.    */
+function bestBargain(player){
+  let best = null, bestScore = -1;
+  player.purchases.forEach(t => {
+    const score = t.price === 0 ? t.player.rating * 2 : t.player.rating / t.price;
+    if (score > bestScore){ bestScore = score; best = t; }
+  });
+  return best;
+}
+function mostExpensive(player){
+  return player.purchases.reduce((a, t) => (!a || t.price > a.price ? t : a), null);
+}
+
+/* ---- 7. Reset ---------------------------------------------------------- */
+function resetGame(opts){ return createGame(opts); }
+
+/* =========================================================================
+   SELF-TESTS — Settings > Run rule tests
+   ========================================================================= */
+function runRuleTests(){
+  const out = [];
+  const t = (name, cond) => out.push({ name, pass: !!cond });
+  const seq = seed => { let x = seed; return () => (x = (x * 1103515245 + 12345) % 2147483648) / 2147483648; };
+
+  let s = createGame({ rng: seq(7) });
+  t('Both managers start on 100M$', s.players[1].budget === 100 && s.players[2].budget === 100);
+  t('There are exactly 12 auctions', SLOTS.length === 12);
+  t('Auction 12 is the coach', SLOTS[11].key === 'COACH');
+  t('Opening bid is 0M$', s.bid === 0);
+  t('Main and secret differ', s.main.id !== s.secret.id);
+  t('Secret shares the auction position', s.secret.position === s.slot.pool);
+
+  t('Rejects text', validateBid(s, 1, 'abc').ok === false);
+  t('Rejects empty input', validateBid(s, 1, '').ok === false);
+  t('Rejects 0M$', validateBid(s, 1, 0).ok === false);
+  t('Rejects negative bids', validateBid(s, 1, -5).ok === false);
+  t('Rejects bids over budget', validateBid(s, 1, 150).ok === false);
+  t('Accepts a decimal bid (12.5M$)', validateBid(s, 1, 12.5).ok === true);
+  t('Blocks the player whose turn it is not', validateBid(s, 2, 10).ok === false);
+
+  placeBid(s, 1, 8);
+  t('Bid updates current bid and leader', s.bid === 8 && s.lastBidder === 1);
+  t('Turn passes to the rival', s.turn === 2);
+  t('Equal bid rejected', validateBid(s, 2, 8).ok === false);
+  t('Lower bid rejected', validateBid(s, 2, 7).ok === false);
+  t('Leader cannot pass', canPass(s, 1).ok === false);
+
+  placeBid(s, 2, 13);
+  placeBid(s, 1, 20);
+  const mainName = s.main.name, secretId = s.secret.id;
+  const r = passAuction(s, 2);
+  t('Pass closes the auction', s.auctionClosed === true);
+  t('Winner is the rival of the passer', r.result.winner === 1);
+  t('Winner pays the last bid', s.players[1].budget === 80 && s.players[1].spent === 20);
+  t('Winner receives the auctioned player', s.players[1].squad.GK.name === mainName);
+  t('Passer receives the secret player free', s.players[2].squad.GK.id === secretId && s.players[2].budget === 100);
+  t('No bidding after the auction ends', validateBid(s, 1, 30).ok === false);
+  t('No second pass', passAuction(s, 1).ok === false);
+
+  moveToNextPosition(s);
+  t('Next auction resets the bid to 0M$', s.bid === 0 && s.lastBidder === null);
+  t('Auction 2 is the right back', s.slot.key === 'RB');
+  t('Used players never return', s.usedIds.indexOf(secretId) !== -1);
+
+  // Zero-bid pass: rival wins for free.
+  let z = createGame({ rng: seq(19) });
+  const zMain = z.main.id;
+  passAuction(z, 1);
+  t('Instant pass at 0M$ gives the player away free', z.players[2].squad.GK.id === zMain && z.players[2].budget === 100);
+
+  // Full 12-auction run, alternating passes.
+  let f = createGame({ rng: seq(42) });
+  const seen = {};
+  for (let i = 0; i < 12; i++){
+    if (i % 3 === 0) placeBid(f, f.turn, 5);
+    passAuction(f, f.lastBidder === 1 ? 2 : (f.lastBidder === 2 ? 1 : f.turn));
+    const h = f.history[f.history.length - 1];
+    seen[h.main.id] = (seen[h.main.id] || 0) + 1;
+    seen[h.secret.id] = (seen[h.secret.id] || 0) + 1;
+    moveToNextPosition(f);
+  }
+  t('Game ends after 12 auctions', f.gameOver === true);
+  t('No card is ever handed out twice', Object.values(seen).every(v => v === 1));
+  t('Player 1 has 11 players + 1 coach',
+     Object.keys(f.players[1].squad).length === 11 && !!f.players[1].coach);
+  t('Player 2 has 11 players + 1 coach',
+     Object.keys(f.players[2].squad).length === 11 && !!f.players[2].coach);
+  t('Budgets never go negative', f.players[1].budget >= 0 && f.players[2].budget >= 0);
+  t('Spent + remaining = 100M$ for both',
+     money(f.players[1].budget + f.players[1].spent) === 100 &&
+     money(f.players[2].budget + f.players[2].spent) === 100);
+
+  const pw = calculateTeamPower(f.players[1]);
+  t('Team power = squad average + coach bonus',
+     pw.total === Math.round((pw.avg + pw.coachBonus) * 10) / 10);
+  const m = simulateMatch(f);
+  t('Match returns a score and a verdict', m.g1 >= 0 && m.g2 >= 0 && [0,1,2].indexOf(m.winner) !== -1);
+  t('Possession splits to 100%', m.pos1 + m.pos2 === 100);
+
+  const rs = resetGame({});
+  t('Reset restores 100M$ and empty squads',
+     rs.players[1].budget === 100 && Object.keys(rs.players[1].squad).length === 0 && rs.auctionIndex === 0);
+
+  return out;
+}
+</script>
+<script>
+/* =========================================================================
+   FOOTBALL BARA SALFA — UI LAYER
+   ========================================================================= */
+const $ = id => document.getElementById(id);
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let state = null;
+let settings = { sound:true, vibe:true, demo:false };
+let prevScreen = 'auction';
+let revealTimers = [];
+
+/* ---------- helpers ---------- */
+const POS_LABEL = { GK:'Goalkeeper', RB:'Right Back', LB:'Left Back', CB:'Centre Back',
+  CDM:'Defensive Mid', CM:'Central Mid', RW:'Right Winger', LW:'Left Winger', ST:'Striker', COACH:'Manager' };
+const STOP = ['Jr','Junior','Nazario','Becker','Hernandez '];
+function shortName(name){
+  const parts = name.split(' ');
+  if (parts.length === 1) return name;
+  const last = parts[parts.length - 1];
+  return STOP.indexOf(last) !== -1 ? parts[0] : last;
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function beep(freq, dur, type){
+  if (!settings.sound) return;
+  try{
+    const ctx = beep.ctx || (beep.ctx = new (window.AudioContext || window.webkitAudioContext)());
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'triangle'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }catch(e){}
+}
+function buzz(ms){ if (settings.vibe && navigator.vibrate) navigator.vibrate(ms); }
+let toastTimer;
+function toast(msg){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+function show(name){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $('screen-' + name).classList.add('active');
+  window.scrollTo({ top:0, behavior: REDUCED ? 'auto' : 'smooth' });
+}
+
+/* ---------- cards ---------- */
+function statBar(label, val){
+  return '<div class="stat"><i>' + label + '</i><b>' + val + '</b><div class="bar"><i style="width:' + val + '%"></i></div></div>';
+}
+function cardHTML(p, mini){
+  if (!p) return '';
+  const isCoach = p.position === 'COACH';
+  const stats = isCoach ? '' :
+    '<div class="card-stats">' +
+      statBar('PAC', p.pace) + statBar('SHO', p.shooting) + statBar('PAS', p.passing) +
+      statBar('DEF', p.defending) + statBar('PHY', p.physical) +
+    '</div>';
+  return '<div class="card ' + p.rarity + (mini ? ' mini' : '') + (isCoach ? ' card-coach' : '') + '">' +
+    '<div class="ribbon">' + esc(p.type) + '</div>' +
+    '<div class="card-top">' +
+      '<div><div class="card-rating">' + p.rating + '</div>' +
+      '<div class="card-pos">' + esc(POS_LABEL[p.position] || p.position) + '</div></div>' +
+      '<div class="card-portrait">' + esc(p.initials) + '</div>' +
+    '</div>' +
+    '<div class="card-name">' + esc(p.name) + '</div>' +
+    '<div class="card-meta">' + esc(p.club) + ' <i class="dot"></i> ' + esc(p.country) +
+      ' <i class="dot"></i> ' + esc(p.value) + '</div>' +
+    stats +
+  '</div>';
+}
+
+/* ---------- home ---------- */
+function renderHomeCards(){
+  const picks = [POOLS.LW[2], POOLS.ST[0], POOLS.CM[0]];
+  $('homeCards').innerHTML = picks.map(p => cardHTML(p, true)).join('');
+}
+
+/* ---------- auction screen ---------- */
+function startGame(){
+  state = createGame({ demo: settings.demo });
+  renderAuction();
+  show('auction');
+  beep(660, .12);
+}
+
+function renderAuction(){
+  $('acNum').textContent = state.auctionIndex + 1;
+  $('acPos').textContent = state.slot.label;
+  $('timeline').innerHTML = SLOTS.map((s, i) =>
+    '<i class="' + (i < state.auctionIndex ? 'done' : i === state.auctionIndex ? 'now' : '') + '"></i>').join('');
+  const slot = $('cardSlot');
+  slot.innerHTML = cardHTML(state.main, false);
+  slot.firstChild.classList.add('card-enter');
+  $('input1').value = ''; $('input2').value = '';
+  $('msg1').textContent = ''; $('msg2').textContent = '';
+  renderLog();
+  updateBidDisplay(false);
+  updatePanels();
+}
+
+function updateBidDisplay(pulse){
+  const v = $('bidValue');
+  v.textContent = formatM(state.bid);
+  if (pulse && !REDUCED){ v.classList.remove('pulse'); void v.offsetWidth; v.classList.add('pulse'); }
+  const lead = $('bidLeader');
+  if (state.lastBidder){
+    lead.innerHTML = 'Leading: <b class="p' + state.lastBidder + 'c">Player ' + state.lastBidder + '</b>';
+  } else {
+    lead.textContent = 'No bids yet — the floor is open.';
+  }
+}
+
+function updatePanels(){
+  [1, 2].forEach(n => {
+    const p = state.players[n];
+    $('bud' + n).textContent = formatM(p.budget);
+    const count = Object.keys(p.squad).length;
+    $('mini' + n).textContent = 'Squad ' + count + '/11 · Coach ' + (p.coach ? p.coach.name : 'none') +
+      ' · Spent ' + formatM(p.spent);
+    const active = state.turn === n && !state.auctionClosed;
+    $('panel' + n).classList.toggle('active', active);
+    $('bid' + n).disabled = !active;
+    $('pass' + n).disabled = state.auctionClosed || state.lastBidder === n;
+    document.querySelectorAll('[data-quick="' + n + '"] button').forEach(b => b.disabled = !active);
+  });
+  const tb = $('turnBanner');
+  if (state.auctionClosed){ tb.textContent = 'Auction closed'; tb.className = 'turn-banner'; }
+  else {
+    tb.textContent = 'Player ' + state.turn + ' to act';
+    tb.className = 'turn-banner t' + state.turn;
+    const p = state.players[state.turn];
+    if (money(p.budget) <= money(state.bid)){
+      tb.textContent = 'Player ' + state.turn + ' — budget too low, you must pass';
+    }
+  }
+}
+
+function renderLog(){
+  const items = state.log.slice(0, 12).map(l => {
+    const cls = 'p' + l.num + 'c';
+    return '<div class="log-item"><b class="' + cls + '">Player ' + l.num + '</b> ' + esc(l.text) + '</div>';
+  }).join('');
+  $('logItems').innerHTML = items || '<div class="log-item" style="color:#7B8F86">Auction open at 0M$. Player ' +
+    state.turn + ' starts.</div>';
+}
+
+function panelMessage(n, msg, good){
+  const m = $('msg' + n);
+  m.textContent = msg || '';
+  m.classList.toggle('ok', !!good);
+}
+
+function handleBid(n){
+  const raw = $('input' + n).value.trim();
+  const res = placeBid(state, n, raw);
+  if (!res.ok){ panelMessage(n, res.message); beep(180, .12, 'square'); buzz(30); return; }
+  panelMessage(n, '');
+  panelMessage(n === 1 ? 2 : 1, '');
+  $('input' + n).value = '';
+  const panel = $('panel' + n);
+  panel.classList.remove('flash'); void panel.offsetWidth; panel.classList.add('flash');
+  updateBidDisplay(true);
+  updatePanels();
+  renderLog();
+  beep(520 + Math.min(state.bid, 40) * 6, .09);
+  buzz(15);
+}
+
+function handlePass(n){
+  const check = canPass(state, n);
+  if (!check.ok){ panelMessage(n, check.message); beep(180, .12, 'square'); return; }
+  const res = passAuction(state, n);
+  if (!res.ok){ panelMessage(n, res.message); return; }
+  updatePanels(); renderLog();
+  beep(320, .18, 'sawtooth'); buzz([20, 40, 60]);
+  setTimeout(() => showResult(res.result), REDUCED ? 0 : 420);
+}
+
+/* ---------- result screen + secret reveal ---------- */
+function showResult(r){
+  revealTimers.forEach(clearTimeout); revealTimers = [];
+  const w = $('resWinner');
+  w.textContent = 'Player ' + r.winner + ' wins the bid';
+  w.className = 'won-badge p' + r.winner + 'c';
+  $('resPaid').textContent = 'Paid ' + formatM(r.price) + ' · Budget left ' +
+    formatM(state.players[r.winner].budget) + ' · Player ' + r.loser + ' gets the secret card';
+  $('labelWon').textContent = 'Player ' + r.winner + ' signs';
+  $('labelSecret').textContent = 'Player ' + r.loser + ' receives';
+  $('resMainCard').innerHTML = cardHTML(r.main, false);
+  $('resSecretCard').innerHTML = cardHTML(r.secret, false);
+  $('flip').classList.remove('flipped');
+  $('freeTag').classList.add('hidden');
+  $('btnNext').textContent = state.auctionIndex >= SLOTS.length - 1 ? 'See final result' : 'Next position';
+  show('result');
+
+  const cd = $('countdown');
+  if (REDUCED){
+    cd.classList.add('hidden');
+    $('flip').classList.add('flipped');
+    $('freeTag').classList.remove('hidden');
+    return;
+  }
+  cd.classList.remove('hidden');
+  [3, 2, 1].forEach((nmb, i) => {
+    revealTimers.push(setTimeout(() => {
+      cd.innerHTML = '<span>' + nmb + '</span>';
+      beep(420 + i * 90, .1);
+    }, 300 + i * 700));
+  });
+  revealTimers.push(setTimeout(() => {
+    cd.classList.add('hidden');
+    $('flip').classList.add('flipped');
+    beep(880, .22);
+    buzz(60);
+  }, 2450));
+  revealTimers.push(setTimeout(() => $('freeTag').classList.remove('hidden'), 3100));
+}
+
+function nextPosition(){
+  const res = moveToNextPosition(state);
+  if (!res.ok){ toast(res.message); return; }
+  if (res.finished){ showFinal(); return; }
+  renderAuction();
+  show('auction');
+  beep(600, .1);
+}
+
+/* ---------- squads ---------- */
+function pitchHTML(pl){
+  const slots = SLOTS.filter(s => s.key !== 'COACH').map(s => {
+    const p = pl.squad[s.key];
+    return '<div class="slot ' + (p ? 'filled' : 'empty') + '" style="left:' + s.x + '%;top:' + s.y + '%">' +
+      '<div class="shirt">' + (p ? p.rating : '—') + '</div>' +
+      (p ? '<span class="nm">' + esc(shortName(p.name)) + '</span>' : '') +
+      '<small>' + s.short + '</small>' +
+    '</div>';
+  }).join('');
+  return '<div class="pitch"><div class="pitch-lines">' +
+    '<div class="pl-boxA"></div><div class="pl-boxB"></div><div class="pl-half"></div><div class="pl-circle"></div>' +
+    '</div>' + slots + '</div>';
+}
+
+function squadBoxHTML(n, opts){
+  opts = opts || {};
+  const pl = state.players[n];
+  const power = calculateTeamPower(pl);
+  const coach = pl.coach;
+  const exp = mostExpensive(pl);
+  const barg = bestBargain(pl);
+  const frees = pl.purchases.filter(t => t.free).length;
+  const rows = opts.full ? (
+    '<div class="stat-rows">' +
+      '<div><span>Starting budget</span><b>' + formatM(START_BUDGET) + '</b></div>' +
+      '<div><span>Total spent</span><b>' + formatM(pl.spent) + '</b></div>' +
+      '<div><span>Remaining</span><b>' + formatM(pl.budget) + '</b></div>' +
+      '<div><span>Squad average</span><b>' + power.avg + '</b></div>' +
+      '<div><span>Coach bonus</span><b>' + (power.coachBonus >= 0 ? '+' : '') + power.coachBonus + '</b></div>' +
+      '<div><span>Most expensive</span><b>' + (exp && exp.price > 0 ? esc(shortName(exp.player.name)) + ' · ' + formatM(exp.price) : 'Nothing paid') + '</b></div>' +
+      '<div><span>Best bargain</span><b>' + (barg ? esc(shortName(barg.player.name)) + ' · ' + (barg.free ? 'free' : formatM(barg.price)) : '—') + '</b></div>' +
+      '<div><span>Free secret signings</span><b>' + frees + '</b></div>' +
+    '</div>'
+  ) : (
+    '<div class="stat-rows">' +
+      '<div><span>Spent</span><b>' + formatM(pl.spent) + '</b></div>' +
+      '<div><span>Remaining</span><b>' + formatM(pl.budget) + '</b></div>' +
+      '<div><span>Squad</span><b>' + power.filled + '/11</b></div>' +
+    '</div>'
+  );
+  return '<div class="squad-box p' + n + '">' +
+    '<div class="squad-head"><h3 style="color:' + (n === 1 ? '#9CCBFF' : '#FFB0B9') + '">Player ' + n + '</h3>' +
+      '<div class="power">Team power<b>' + power.total + '</b></div></div>' +
+    pitchHTML(pl) +
+    '<div class="coach-row"><div class="badge">' + (coach ? esc(coach.initials) : '?') + '</div>' +
+      '<div><span class="nm">' + (coach ? esc(coach.name) : 'No coach yet') + '</span>' +
+      '<small>' + (coach ? esc(coach.club) : 'Auction 12') + '</small></div>' +
+      '<div class="rt">' + (coach ? coach.rating : '—') + '</div></div>' +
+    rows +
+  '</div>';
+}
+
+function renderSquads(){
+  $('squadsWrap').innerHTML = squadBoxHTML(1) + squadBoxHTML(2);
+  $('squadsSub').textContent = '4-3-3 · after ' + state.history.length + ' of 12 auctions';
+}
+
+/* ---------- final ---------- */
+function showFinal(){
+  const m = simulateMatch(state);
+  $('fScore').textContent = m.g1 + ' - ' + m.g2;
+  $('fVerdict').textContent = m.winner === 0 ? 'Honours shared' : 'Player ' + m.winner + ' wins';
+  $('fVerdict').style.color = m.winner === 1 ? '#9CCBFF' : m.winner === 2 ? '#FFB0B9' : 'var(--gold)';
+  $('fVerdictSub').textContent = m.reason + ' Team power ' + m.power1.total + ' vs ' + m.power2.total + '.';
+  const cells = [
+    ['Possession', m.pos1 + '% – ' + m.pos2 + '%'],
+    ['Shots', m.shots1 + ' – ' + m.shots2],
+    ['Expected goals', m.xg1 + ' – ' + m.xg2],
+    ['Man of the match', m.mvp ? shortName(m.mvp.name) + ' (' + m.mvp.rating + ')' : '—'],
+    ['Team power', m.power1.total + ' – ' + m.power2.total],
+    ['Money left', formatM(state.players[1].budget) + ' – ' + formatM(state.players[2].budget)],
+    ['Biggest fee P1', feeLabel(mostExpensive(state.players[1]))],
+    ['Biggest fee P2', feeLabel(mostExpensive(state.players[2]))]
+  ];
+  $('fStats').innerHTML = cells.map(c => '<div class="ms"><i>' + c[0] + '</i><b>' + esc(c[1]) + '</b></div>').join('');
+  $('finalSquads').innerHTML = squadBoxHTML(1, { full:true }) + squadBoxHTML(2, { full:true });
+  show('final');
+  beep(523, .14); setTimeout(() => beep(659, .14), 150); setTimeout(() => beep(784, .3), 300);
+}
+function feeLabel(t){
+  if (!t || t.price === 0) return 'Nothing paid';
+  return shortName(t.player.name) + ' · ' + formatM(t.price);
+}
+
+/* ---------- modals ---------- */
+function openModal(id){ $(id).classList.add('open'); }
+function closeModals(){ document.querySelectorAll('.modal-bg').forEach(m => m.classList.remove('open')); }
+let confirmAction = null;
+function confirmDialog(title, text, yesLabel, action){
+  $('cfTitle').textContent = title; $('cfText').textContent = text;
+  $('cfYes').textContent = yesLabel; confirmAction = action;
+  openModal('modalConfirm');
+}
+
+/* ---------- wiring ---------- */
+function bind(){
+  $('btnStart').onclick = startGame;
+  $('btnHowToStart').onclick = () => { closeModals(); startGame(); };
+  $('btnHowTo').onclick = () => show('howto');
+  document.querySelectorAll('[data-go="home"]').forEach(b => b.onclick = () => show('home'));
+  $('btnSettings').onclick = () => openModal('modalSettings');
+  document.querySelectorAll('[data-close-modal]').forEach(b => b.onclick = closeModals);
+  document.querySelectorAll('.modal-bg').forEach(m => m.addEventListener('click', e => {
+    if (e.target === m) closeModals();
+  }));
+
+  [1, 2].forEach(n => {
+    $('bid' + n).onclick = () => handleBid(n);
+    $('pass' + n).onclick = () => handlePass(n);
+    $('input' + n).addEventListener('keydown', e => { if (e.key === 'Enter') handleBid(n); });
+    $('input' + n).addEventListener('input', () => panelMessage(n, ''));
+    document.querySelectorAll('[data-quick="' + n + '"] button').forEach(b => {
+      b.onclick = () => {
+        const add = parseFloat(b.dataset.add);
+        const base = Math.max(state.bid, parseFloat($('input' + n).value) || state.bid);
+        $('input' + n).value = money(base + add);
+        panelMessage(n, '');
+      };
+    });
+  });
+
+  $('btnNext').onclick = nextPosition;
+  $('btnViewSquads').onclick = () => { prevScreen = 'result'; renderSquads(); show('squads'); };
+  $('btnBackFromSquads').onclick = () => show(prevScreen);
+  $('btnPlayAgain').onclick = startGame;
+  $('btnFinalHome').onclick = () => show('home');
+  $('btnQuit').onclick = () => confirmDialog('Leave this game?',
+    'The current auction, both squads and the budgets will be lost.', 'Leave', () => { closeModals(); show('home'); });
+  $('cfYes').onclick = () => { if (confirmAction) confirmAction(); };
+
+  $('btnResetGame').onclick = () => confirmDialog('Reset the game?',
+    'Budgets go back to 100M$, both squads are emptied and the auction restarts at 1/12.',
+    'Reset', () => { closeModals(); startGame(); toast('New game — auction 1 of 12'); });
+
+  const sw = (el, key, after) => {
+    el.onclick = () => {
+      settings[key] = !settings[key];
+      el.classList.toggle('on', settings[key]);
+      if (after) after();
+    };
+  };
+  sw($('swSound'), 'sound', () => beep(700, .1));
+  sw($('swVibe'), 'vibe', () => buzz(25));
+  sw($('swDemo'), 'demo', () => toast(settings.demo
+    ? 'Demo mode on — fixed players from the next game'
+    : 'Demo mode off — players are random again'));
+
+  $('btnRunTests').onclick = () => {
+    const out = runRuleTests();
+    const failed = out.filter(r => !r.pass).length;
+    $('testOut').classList.remove('hidden');
+    $('testOut').innerHTML =
+      out.map(r => '<span class="' + (r.pass ? 'ok' : 'bad') + '">' + (r.pass ? 'PASS' : 'FAIL') + '</span>  ' + esc(r.name)).join('\n') +
+      '\n\n' + (out.length - failed) + '/' + out.length + ' rules verified.';
+  };
+}
+
+renderHomeCards();
+bind();
+</script>
+</body>
+</html>
